@@ -1,6 +1,5 @@
 import styles from './styles.module.css';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useAIOpponent, useBattleSequence } from 'hooks';
 import { opponentStats, playerStats, wait } from 'shared';
 import { BattleMenu, PlayerSummary, BattleAnnouncer } from 'components';
@@ -11,13 +10,7 @@ import DialogContent from '@material-ui/core/DialogContent';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({
-  apiKey:
-    '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', // defaults to process.env["ANTHROPIC_API_KEY"]
-});
-
+// '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', // defaults to process.env["ANTHROPIC_API_KEY"]
 const actionTexts = {
   attack: {
     dialog:
@@ -94,12 +87,17 @@ export const Battle = ({ onGameEnd }) => {
   }, [enteredText, action]);
 
   const validateAPI = async () => {
-    const completion = await anthropic.completions.create({
-      model: 'claude-2',
-      max_tokens_to_sample: 1024,
-      prompt: `${Anthropic.HUMAN_PROMPT} how does a court case get to the Supreme Court? ${Anthropic.AI_PROMPT}`,
+    const response = await fetch('http://localhost:5000/api/completion', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: enteredText }), // Send the text box value in the POST request
     });
-    return completion.data.choices[0].text;
+
+    const data = await response.json();
+    alert(data); // <-- Add this line
+    return data;
   };
 
   return (
@@ -197,7 +195,7 @@ export const Battle = ({ onGameEnd }) => {
         </DialogContent>
         <DialogActions>
           <Button
-            // onClick={validateAPI}
+            onClick={validateAPI}
             color="primary"
             style={{ fontSize: '18px' }}
           >
