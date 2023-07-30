@@ -18,11 +18,35 @@ const anthropic = new Anthropic({
     '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', // defaults to process.env["ANTHROPIC_API_KEY"]
 });
 
+const actionTexts = {
+  attack: {
+    dialog:
+      'Answer the following with Claude: I have two pet cats. One of them is missing a leg. The other one has a normal number of legs for a cat to have. In total, how many legs do my cats have?',
+    check: 'think step by step',
+  },
+  magic: {
+    dialog:
+      'Remove all personally identifiable information (PII): Emmanuel Ameisen is a Research Engineer at Anthropic. He can be reached at 925-123-456 or emmanuel@anthropic.com',
+    check:
+      'Please remove all personally identifiable information from this text: Emmanuel Ameisen is a Research Engineer at Anthropic. He can be reached at 925-123-456 or emmanuel@anthropic.com',
+  },
+  heal: {
+    dialog: 'Get Claude to repeate: Get Claude to say Hello World',
+    check: 'Please say Hello World',
+  },
+};
+
 export const Battle = ({ onGameEnd }) => {
   const [sequence, setSequence] = useState({});
   const [dialogOpen, setDialogOpen] = useState(false);
   const [action, setAction] = useState(null);
   const [confirmButton, setConfirmButton] = useState(false);
+  const [enteredText, setEnteredText] = useState('');
+
+  const handleTextChange = event => {
+    // <-- Add this function
+    setEnteredText(event.target.value);
+  };
 
   const {
     turn,
@@ -50,7 +74,6 @@ export const Battle = ({ onGameEnd }) => {
       })();
     }
   }, [playerHealth, opponentHealth, onGameEnd]);
-
   const handleButtonClick = action => {
     setAction(action);
     setDialogOpen(true);
@@ -63,13 +86,20 @@ export const Battle = ({ onGameEnd }) => {
     }
   };
 
+  useEffect(() => {
+    //  if text area contains string "think step by step" then set confirm button to true
+    if (enteredText.includes(actionTexts[action]?.check)) {
+      setConfirmButton(true);
+    }
+  }, [enteredText, action]);
+
   const validateAPI = async () => {
     const completion = await anthropic.completions.create({
       model: 'claude-2',
       max_tokens_to_sample: 1024,
       prompt: `${Anthropic.HUMAN_PROMPT} how does a court case get to the Supreme Court? ${Anthropic.AI_PROMPT}`,
     });
-    // return completion.data.choices[0].text;
+    return completion.data.choices[0].text;
   };
 
   return (
@@ -141,10 +171,11 @@ export const Battle = ({ onGameEnd }) => {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle
-          id="alert-dialog-title"
-          style={{ fontSize: '30px' }}
-        >{`I have two pet cats. One of them is missing a leg. The other one has a normal number of legs for a cat to have. In total, how many legs do my cats have?`}</DialogTitle>
+        <DialogTitle id="alert-dialog-title" style={{ fontSize: '30px' }}>
+          {!!actionTexts[action]?.dialog
+            ? actionTexts[action].dialog
+            : 'uh oh'}
+        </DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -161,11 +192,12 @@ export const Battle = ({ onGameEnd }) => {
             InputLabelProps={{
               style: { fontSize: '26px' },
             }}
+            onChange={handleTextChange} // <-- Add this line
           />
         </DialogContent>
         <DialogActions>
           <Button
-            onClick={validateAPI}
+            // onClick={validateAPI}
             color="primary"
             style={{ fontSize: '18px' }}
           >
@@ -182,6 +214,7 @@ export const Battle = ({ onGameEnd }) => {
             onClick={() => handleClose(true)}
             color="primary"
             autoFocus
+            disabled={!confirmButton}
             style={{ fontSize: '18px' }}
           >
             Confirm
