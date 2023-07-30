@@ -3,8 +3,7 @@ from flask_cors import CORS
 from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
 
 app = Flask(__name__)
-# This will enable CORS for all routes
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app)  # This will enable CORS for all routes
 
 anthropic = Anthropic(
     # defaults to os.environ.get("ANTHROPIC_API_KEY")

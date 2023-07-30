@@ -87,17 +87,31 @@ export const Battle = ({ onGameEnd }) => {
   }, [enteredText, action]);
 
   const validateAPI = async () => {
-    const response = await fetch('http://localhost:5000/api/completion', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text: enteredText }), // Send the text box value in the POST request
-    });
+    try {
+      const response = await fetch(
+        'https://fastapi-production-f739.up.railway.app/claude_completions',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text: enteredText }), // Send the text box value in the POST request
+        },
+      );
 
-    const data = await response.json();
-    alert(data); // <-- Add this line
-    return data;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      alert(data);
+      return data;
+    } catch (error) {
+      console.error(
+        'There was a problem with the fetch operation:',
+        error,
+      );
+    }
   };
 
   return (
